@@ -83,7 +83,7 @@ trait BaseCognitoGuard
             } else {
                 return null;
             } //End if
-                        
+
         } catch (InvalidUserException | Exception $e) {
             Log::debug('BaseCognitoGuard:setLocalUserData:Exception:');
             throw $e;
@@ -136,7 +136,7 @@ trait BaseCognitoGuard
 
         //Return value
         $returnValue = null;
-        
+
         switch ($result['ChallengeName']) {
             case 'SOFTWARE_TOKEN_MFA':
                 $returnValue = [
@@ -184,7 +184,7 @@ trait BaseCognitoGuard
             $rememberMe = $request->has('remember')?$request['remember']:false;
             $payload = array_merge($payload, ['remember' => $rememberMe]);
         } //End if
-        
+
         //Get the configuration fields
         $userFields = array_filter(config('cognito.cognito_user_fields'), function($value) {
             return !empty($value);
@@ -197,11 +197,11 @@ trait BaseCognitoGuard
                     case $paramUsername:
                         $payload = array_merge($payload, ['email' => $value]);
                         break;
-                    
+
                     case $paramPassword:
                         $payload = array_merge($payload, ['password' => $value]);
                         break;
-                    
+
                     default:
                         if ($isCredential && array_key_exists($key, $userFields)) {
                             $payload = array_merge($payload, [$key => $value]);
@@ -235,7 +235,7 @@ trait BaseCognitoGuard
 
                     //Create user object from cognito data
                     $payloadUser = $this->buildLocalUserPayload(collect($userRemote['UserAttributes']));
-                    
+
                     //Create user into local DB
                     if ($this->createLocalUser($payloadUser->toArray())) {
                         $user = $this->provider->retrieveByCredentials($credentials->toArray());
@@ -244,7 +244,7 @@ trait BaseCognitoGuard
                     throw new NoLocalUserException();
                 } //End if
             } //End if
-    
+
             return $user;
         } catch (InvalidUserException | NoLocalUserException | Exception $e) {
             Log::debug('BaseCognitoGuard:setLocalUserData:Exception');
@@ -293,7 +293,7 @@ trait BaseCognitoGuard
         return collect($payload);
     } //Function ends
 
-    
+
     /**
      * Create a local user if one does not exist.
      *
@@ -311,9 +311,17 @@ trait BaseCognitoGuard
             if (array_key_exists($keyPassword, $dataUser)) {
                 unset($dataUser[$keyPassword]);
             } //End if
-            
+
+            $findUserBy = $dataUser;
+
+            if (config('cognito.unique_local_user_field')) {
+                $findUserBy = array_filter($dataUser, function ($k) {
+                    return $k === config('cognito.unique_local_user_field');
+                }, ARRAY_FILTER_USE_KEY);
+            }
+
             //Create user into local DB, if not exists
-            $user = $userModel::updateOrCreate($dataUser);
+            $user = $userModel::updateOrCreate($findUserBy, $dataUser);
         } //End if
 
         return $user;

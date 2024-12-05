@@ -159,6 +159,11 @@ return [
     'add_missing_local_user'    => env('AWS_COGNITO_ADD_LOCAL_USER', false),
     'delete_user'               => env('AWS_COGNITO_DELETE_USER', false),
 
+    // When this field is set, the local user will be found by this field and updated when exists instead
+    // of throwing an exception
+    'unique_local_user_field' => env('AWS_COGNITO_UNIQUE_LOCAL_USER_FIELD'),
+
+
     // Package configurations
     'sso_user_model'        => env('AWS_COGNITO_USER_MODEL', 'App\Models\User'),
 
@@ -271,7 +276,7 @@ return [
     | Allow new user to set the password and have verified
     |--------------------------------------------------------------------------
     |
-    | This option enables the user to set the password and have that verified 
+    | This option enables the user to set the password and have that verified
     | during the to invitation for the new user. The default value is set to true.
     |
     */

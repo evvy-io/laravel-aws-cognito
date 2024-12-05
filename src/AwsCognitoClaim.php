@@ -65,18 +65,22 @@ class AwsCognitoClaim
      *
      * @return void
      */
-    public function __construct(AwsResult $result, Authenticatable $user=null) {
+    public function __construct(AwsResult|string $result, Authenticatable $user=null) {
         try {
-            $authResult = $result['AuthenticationResult'];
-            if (!is_array($authResult)) {
-                throw new Exception('Malformed AWS Authentication Result.', 400);
-            } //End if
+            if (is_string($result)) {
+                $token = $result;
+            } else {
+                $authResult = $result['AuthenticationResult'];
+                if (!is_array($authResult)) {
+                    throw new Exception('Malformed AWS Authentication Result.', 400);
+                }
 
-            //Create token object
-            $token = $authResult['AccessToken'];
+                //Create token object
+                $token = $authResult['AccessToken'];
+            }
 
             $this->token = (string) (new AwsCognitoTokenValidator)->check($token);
-            $this->data = $authResult;
+            $this->data = $authResult ?? [];
 
             //Decode the token
             $decodedToken = (array) (new AwsCognitoTokenValidator)->decode($token);
@@ -133,7 +137,7 @@ class AwsCognitoClaim
         $this->user = $user;
     } //Function ends
 
-    
+
     /**
      * Get the Username.
      *

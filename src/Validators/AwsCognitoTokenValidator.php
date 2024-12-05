@@ -77,7 +77,7 @@ class AwsCognitoTokenValidator
             | Exception $e) {
             throw new InvalidTokenException($e->getMessage());
         } //End try-catch
-        
+
         return ($isDecodedToken)?$decodedToken:$token;
     } //Function ends
 
@@ -108,7 +108,7 @@ class AwsCognitoTokenValidator
         } catch (Exception $e) {
             throw new InvalidTokenException($e->getMessage());
         } //End try-catch
-        
+
         return true;
     } //Function ends
 

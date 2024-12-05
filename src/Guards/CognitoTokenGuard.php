@@ -67,7 +67,7 @@ class CognitoTokenGuard extends TokenGuard
      * @var \Ellaisys\Cognito\AwsCognitoClaim|null
      */
     protected $claim;
-    
+
 
     /**
      * @var Authentication Challenge
@@ -173,7 +173,7 @@ class CognitoTokenGuard extends TokenGuard
                     case 'NotAuthorizedException':
                         $errorCode = 'cognito.validation.auth.user_unauthorized';
                         break;
-                    
+
                     default:
                         $errorCode = $e->getAwsErrorCode();
                         break;
@@ -233,7 +233,7 @@ class CognitoTokenGuard extends TokenGuard
                     unset($claim['username']);
                     unset($claim['user']);
                     break;
-                
+
                 default:
                     # code...
                     break;
@@ -310,7 +310,7 @@ class CognitoTokenGuard extends TokenGuard
             //Revoke the token from AWS Cognito
             if ($this->client->signOut($accessToken)) {
 
-                //Global logout and invalidate the Refresh Token 
+                //Global logout and invalidate the Refresh Token
                 if ($forceForever) {
                     //Get claim data
                     $data = $this->cognito->getClaim();
@@ -358,6 +358,24 @@ class CognitoTokenGuard extends TokenGuard
         if (! $this->cognito->parser()->setRequest($this->request)->hasToken()) {
             return null;
         } //End if
+
+        // When token is not created from this package we need to store it first
+        $this->cognito->parseToken();
+
+        if (! $this->cognito->getClaim()) {
+            $this->claim = new AwsCognitoClaim($this->cognito->getToken());
+
+            $credentials = collect([
+                config('cognito.user_subject_uuid') => $this->claim->getSub()
+            ]);
+
+            //Check if the user exists
+            $this->lastAttempted = $user = $this->hasValidLocalCredentials($credentials);
+
+            $this->claim->setUser($user);
+            $this->setToken();
+        }
+        // End of external token storage
 
         if (! $this->cognito->parseToken()->authenticate()) {
             throw new NoLocalUserException();

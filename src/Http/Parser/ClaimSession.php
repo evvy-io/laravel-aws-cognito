@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 
 class ClaimSession //implements ParserContract
 {
-    
+
     /**
      * The session key name.
      *
@@ -42,7 +42,8 @@ class ClaimSession //implements ParserContract
      */
     public function parse(Request $request)
     {
-        $claim = $request->session()->has($this->sessionKey)?$request->session()->get($this->sessionKey):null;
+        $claim = $request->hasSession() && $request->session()->has($this->sessionKey) ?
+            $request->session()->get($this->sessionKey) : null;
         if ($claim && is_array($claim) && array_key_exists('token', $claim)) {
             return $claim['token'];
         } //End if
